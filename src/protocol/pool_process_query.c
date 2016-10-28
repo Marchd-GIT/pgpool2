@@ -57,7 +57,6 @@
 #include "utils/pool_select_walker.h"
 #include "query_cache/pool_memqcache.h"
 #include "utils/pool_signal.h"
-#include <malloc.h>
 #ifndef FD_SETSIZE
 #define FD_SETSIZE 512
 #endif
@@ -70,10 +69,6 @@
 #define CRASH_SHUTDOWN_ERROR_CODE "57P02"
 
 
-static struct {
-    int rowCount;
-    char **rows;
-} no_select;
 
 static int reset_backend(POOL_CONNECTION_POOL *backend, int qcnt);
 static char *get_insert_command_table_name(InsertStmt *node);
@@ -1465,9 +1460,9 @@ bool is_select_query(Node *node, char *sql)
 
     int i;
     for(i=0;i<=pool_config->load_balance_not_select_list_count-1;++i){
-        ereport(LOG,(errmsg(pool_config->load_balance_not_select_list_patch)));
-        ereport(LOG,(errmsg(pool_config->load_balance_not_select_list_row[pool_config->load_balance_not_select_list_count-1])));
-        ereport(LOG,(errmsg(sql)));
+        //ereport(LOG,(errmsg(pool_config->load_balance_not_select_list_patch)));
+        //ereport(LOG,(errmsg(pool_config->load_balance_not_select_list_row[pool_config->load_balance_not_select_list_count-1])));
+        //ereport(LOG,(errmsg(sql)));
         if (strstr(sql, pool_config->load_balance_not_select_list_row[i])){
             return false;
         }
