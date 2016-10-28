@@ -100,6 +100,10 @@ typedef struct {
 
 	int load_balance_mode;		/* load balance mode */
 
+	char *load_balance_not_select_list_patch; /* path to list for not_select query */
+    char **load_balance_not_select_list_row;
+    int load_balance_not_select_list_count;
+
 	int replication_stop_on_mismatch;		/* if there's a data mismatch between master and secondary
 											 * start degeneration to stop replication mode
 											 */

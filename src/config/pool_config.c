@@ -2658,7 +2658,65 @@ int pool_get_config(char *confpath, POOL_CONFIG_CONTEXT context)
 			}
 			pool_config->pool_passwd = str;
 		}
+		else if (!strcmp(key, "load_balance_not_select_list_patch") && CHECK_CONTEXT(INIT_CONFIG, context))
+		{
+			char *str;
 
+			if (token != POOL_STRING && token != POOL_UNQUOTED_STRING && token != POOL_KEY)
+			{
+				PARSE_ERROR();
+				fclose(fd);
+				return(-1);
+			}
+			str = extract_string(yytext, token);
+			if (str == NULL)
+			{
+				fclose(fd);
+				return(-1);
+			}
+			pool_config->load_balance_not_select_list_patch = str;
+
+				FILE *in;
+				char c;
+				in = fopen(pool_config->load_balance_not_select_list_patch, "r");
+				int i = 0;
+				int k = 0;
+				int l = 0;
+				while ((c = fgetc(in)) != EOF) {
+					if (c == '\n') {
+						k++;
+						if (l < i) {
+							l = i;
+							i = 0;
+						}
+					}
+					i++;
+				}
+				rewind(in);
+				pool_config->load_balance_not_select_list_count = k;
+				pool_config->load_balance_not_select_list_row = (char **) malloc(sizeof(char *) * pool_config->load_balance_not_select_list_count);
+				int j;
+				for (j = 0; j < pool_config->load_balance_not_select_list_count; j++) {
+					pool_config->load_balance_not_select_list_row[j] = (char *) malloc(sizeof(char) * l);
+				}
+				i = 0;
+				k = 0;
+				while ((c = fgetc(in)) != EOF) {
+					if (c == '\n') {
+						for (i; i <= l; i++) {
+							pool_config->load_balance_not_select_list_row[k][i] = '\0';
+						}
+						k++;
+						i = 0;
+					} else if (c == '\r') {
+						i = 0;
+
+					} else {
+						pool_config->load_balance_not_select_list_row[k][i] = c;
+						i++;
+					}
+				}
+		}
 		else if (!strcmp(key, "backend_socket_dir") && CHECK_CONTEXT(INIT_CONFIG, context))
 		{
 			char *str;

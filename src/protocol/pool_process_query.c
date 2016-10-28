@@ -57,7 +57,7 @@
 #include "utils/pool_select_walker.h"
 #include "query_cache/pool_memqcache.h"
 #include "utils/pool_signal.h"
-
+#include <malloc.h>
 #ifndef FD_SETSIZE
 #define FD_SETSIZE 512
 #endif
@@ -68,6 +68,12 @@
 #define QUERY_CANCEL_ERROR_CODE "57014"
 #define ADMIN_SHUTDOWN_ERROR_CODE "57P01"
 #define CRASH_SHUTDOWN_ERROR_CODE "57P02"
+
+
+static struct {
+    int rowCount;
+    char **rows;
+} no_select;
 
 static int reset_backend(POOL_CONNECTION_POOL *backend, int qcnt);
 static char *get_insert_command_table_name(InsertStmt *node);
@@ -87,7 +93,6 @@ static bool is_all_slaves_command_complete(unsigned char *kind_list, int num_bac
 static bool pool_process_notice_message_from_one_backend(POOL_CONNECTION *frontend, POOL_CONNECTION_POOL *backend, int backend_idx, char kind);
 /* timeout sec for pool_check_fd */
 static int timeoutsec;
-
 /*
  * Main module for query processing
  * reset_request: if non 0, call reset_backend to execute reset queries
@@ -1452,10 +1457,21 @@ static int
  *
  * Note that for SELECT this function returns false.
  */
+
 bool is_select_query(Node *node, char *sql)
 {
 	if (node == NULL)
 		return false;
+
+    int i;
+    for(i=0;i<=pool_config->load_balance_not_select_list_count-1;++i){
+        ereport(LOG,(errmsg(pool_config->load_balance_not_select_list_patch)));
+        ereport(LOG,(errmsg(pool_config->load_balance_not_select_list_row[pool_config->load_balance_not_select_list_count-1])));
+        ereport(LOG,(errmsg(sql)));
+        if (strstr(sql, pool_config->load_balance_not_select_list_row[i])){
+            return false;
+        }
+    }
 
 	/*
 	 * 2009/5/1 Tatsuo says: This test is not bogus. As of 2.2, pgpool
